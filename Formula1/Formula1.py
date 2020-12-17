@@ -156,7 +156,7 @@ def run_car(genomes, config):
                 sys.exit(0)
 
 
-        # Input my data and get result from network
+        # Input from network 
         for index, car in enumerate(cars):
             output = nets[index].activate(car.get_data())
             i = output.index(max(output))
@@ -165,19 +165,19 @@ def run_car(genomes, config):
             else:
                 car.angle -= 10
 
-        # Update car and fitness
+        
         remain_cars = 0
-        for i, car in enumerate(cars):
+        for index, car in enumerate(cars):
             if car.get_alive():
                 remain_cars += 1
                 car.update(map)
-                genomes[i][1].fitness += car.get_reward()
+                genomes[index][1].fitness += car.get_reward()
 
-        # check
+        
         if remain_cars == 0:
             break
 
-        # Drawing
+        
         screen.blit(map, (0, 0))
         for car in cars:
             if car.get_alive():
