@@ -1,8 +1,11 @@
 import gym
 import os
 import neat
-env = gym.make('CartPole-v1')
-env.reset()
+
+
+
+environment = gym.make('CartPole-v1')
+environment.reset()
 steps = 1000
 
 
@@ -10,74 +13,79 @@ steps = 1000
 def eval_genomes(genomes, config):
 
     for genome_id, genome in genomes:
-        observation = [0, 0, 0, 0]  #Inital observation
+        # NEAT initialization
+        observation = [0, 0, 0, 0]  
         gameover = False
         net = neat.nn.FeedForwardNetwork.create(genome, config) #Creat net for genome with configs
-        genome.fitness = 0  #Starting fitness of 0
+        genome.fitness = 0  #Starting fitness at  0
+
+        # Game initialization
+
         while not gameover:
-            env.render()   #Render game   
-            output = net.activate(observation)  #Getting output from net based on observations
+            #environment.render()     uncomment if we want to see the game running 
+            
+            output = net.activate(observation)  
             action = max(output)
+
             if output[0] == action:
                 action = 1
             else:
                 action = 0
 
-            observation, reward, gameover, info = env.step(action)  #Performs action
+            observation, reward, gameover, info = environment.step(action)  #Performs action
             if observation[3] > 0.5 or observation[3] < -0.5:   
                 gameover = True
                 reward = -5
-                env.reset()
-            genome.fitness += reward    #Rewards genome for each turn
-        env.reset()
+                environment.reset()
+            genome.fitness += reward    #Rewards genome for each action 
+        environment.reset()
 
 def run(config_file):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
 
-    # Create the population, which is the top-level object for a NEAT run.
-    p = neat.Population(config)
+    Population = neat.Population(config)
 
-    # Add a stdout reporter to show progress in the terminal.
-    p.add_reporter(neat.StdOutReporter(True))
+    # Reporter 
+    Population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
-    #p.add_reporter(neat.Checkpointer(5))
+    Population.add_reporter(stats)
 
-    # Run for up to x generations.
-    winner = p.run(eval_genomes, 50)
+    # NEAT
+    winnerGenome = Population.run(eval_genomes, 50)
 
-    # show final stats
-    print('\nBest genome:\n{!s}'.format(winner))
+    # Print the best Genome stats 
+    print('\nBest genome:\n{!s}'.format(winnerGenome))
 
-    #test winner
-    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-    test_model(winner_net)  #Tests model 100 times and prints result
+    #test winner 100 times and prints the score over 100 tries 
+    winner_net = neat.nn.FeedForwardNetwork.create(winnerGenome, config)
+    test_model(winner_net)  
 
-def test_model(winner):
+def test_model(winnerGenome):
     
     observation = [0, 0, 0, 0]
     score = 0
     reward = 0
+    #testing 100 times the genome and keeping score to see if he could solve the problem 
     for i in range(100):
         done = False
         observation = [0, 0, 0, 0]
         while not done:
-            #env.render()   #Render game      
-            output = winner.activate(observation)
+            #environment.render()   #Render game uncomment if you want to see the 100 tries it takes some time    
+            output = winnerGenome.activate(observation)
             action = max(output)
             if output[0] == action:
                 action = 1
             else:
                 action = 0
 
-            observation, reward, done, info = env.step(action)
+            observation, reward, done, info = environment.step(action)
             if observation[3] > 0.5 or observation[3] < -0.5:
                 done = True
-                env.reset()
+                environment.reset()
             score += reward
-        env.reset()
+        environment.reset()
 
     print("Score Over 100 tries:")
     print(score/100)
